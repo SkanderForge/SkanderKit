@@ -1,0 +1,19 @@
+# Images
+*.bmp
+*.png
+
+*.svg
+
+# Html output
+*.html
+
+# Visual Studio
+*.vcxproj*
+
+# eclipse
+.settings/
+.project
+.cproject
+
+# Debug
+Debug/
