@@ -838,9 +838,11 @@ bool BMP::ReadFromFile(const char *FileName) {
         j = Height - 1;
         while (j > -1) {
             int BytesRead = (int) fread((char *) Buffer, 1, BufferSize, fp);
+            std::cout << " bytes" << BytesRead << std::endl;
             if (BytesRead < BufferSize) {
                 j = -1;
                 if (EasyBMPwarnings) {
+                    cout << BytesRead << " " << BufferSize << endl;
                     cout << "EasyBMP Error: Could not read proper amount of data." << endl;
                 }
             } else {
@@ -980,7 +982,6 @@ bool BMP::ReadFromString(const std::string &bmpContent) {
     }
     BMFH bmfh;
     bool NotCorrupted = true;
-    std::cout << "asdasd";
     NotCorrupted &= SafeStringRead((char *) &(bmfh.bfType), sizeof(ebmpWORD), 1, ss);
     bool IsBitmap = false;
     if (IsBigEndian() && bmfh.bfType == 16973) { IsBitmap = true; }
@@ -1016,25 +1017,21 @@ bool BMP::ReadFromString(const std::string &bmpContent) {
 
     XPelsPerMeter = bmih.biXPelsPerMeter;
     YPelsPerMeter = bmih.biYPelsPerMeter;
-    std::cout << __LINE__;
     if (bmih.biCompression == 1 || bmih.biCompression == 2) {
         SetSize(1, 1);
         SetBitDepth(1);
         return false;
     }
-    std::cout << __LINE__;
     if (bmih.biCompression > 3) {
         SetSize(1, 1);
         SetBitDepth(1);
         return false;
     }
-    std::cout << __LINE__;
     if (bmih.biCompression == 3 && bmih.biBitCount != 16) {
         SetSize(1, 1);
         SetBitDepth(1);
         return false;
     }
-    std::cout << __LINE__;
     int TempBitDepth = (int) bmih.biBitCount;
     if(    TempBitDepth != 1  && TempBitDepth != 4
            && TempBitDepth != 8  && TempBitDepth != 16
@@ -1111,6 +1108,8 @@ bool BMP::ReadFromString(const std::string &bmpContent) {
     if (BitDepth != 16) {
         std::cout <<__LINE__ << std::endl;
         int BufferSize = (int) ((Width * BitDepth) / 8.0);
+        std::cout << Width << " " << BitDepth  << " deb";
+
         while (8 * BufferSize < Width * BitDepth) { BufferSize++; }
         while (BufferSize % 4) { BufferSize++; }
         ebmpBYTE *Buffer;
@@ -1118,14 +1117,13 @@ bool BMP::ReadFromString(const std::string &bmpContent) {
         j = Height - 1;
 
         while (j > -1) {
-            std::cout<<j<<std::endl;
             ss.read((char*) Buffer, BufferSize);
             int BytesRead = (int) ss.gcount();
-
             if (BytesRead < BufferSize) {
                 j = -1;
                 if( EasyBMPwarnings )
                 {
+                    cout << BytesRead << " " << BufferSize << endl;
                     cout << "EasyBMP Error: Could not read proper amount of data." << endl;
                 }
 
@@ -1135,6 +1133,8 @@ bool BMP::ReadFromString(const std::string &bmpContent) {
                 if (BitDepth == 4) { Success = Read4bitRow(Buffer, BufferSize, j); }
                 if (BitDepth == 8) { Success = Read8bitRow(Buffer, BufferSize, j); }
                 if (BitDepth == 24) { Success = Read24bitRow(Buffer, BufferSize, j); }
+                std::cout<<j<<std::endl;
+
                 if (BitDepth == 32) { Success = Read32bitRow(Buffer, BufferSize, j); }
                 if (!Success) {
                     j = -1;
@@ -1650,6 +1650,7 @@ bool BMP::Read32bitRow(ebmpBYTE *Buffer, int BufferSize, int Row) {
 
 bool BMP::Read24bitRow(ebmpBYTE *Buffer, int BufferSize, int Row) {
     int i;
+
     if (Width * 3 > BufferSize) { return false; }
     for (i = 0; i < Width; i++) { memcpy((char *) &(Pixels[i][Row]), Buffer + 3 * i, 3); }
     return true;

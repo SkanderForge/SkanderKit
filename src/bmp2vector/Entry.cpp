@@ -50,7 +50,9 @@ void test0(const std::string &inFile, const std::string &outFile, bool drawRef) 
     BMP inputBmp;
     std::string inputString = inFile;
 
+
     inputBmp.ReadFromFile(inputString.c_str());
+
 
     imageWrapper w_imWrapper(&inputBmp);
 
@@ -200,11 +202,11 @@ void makeSVG(const std::string &inFile, const std::string &outFile, bool drawRef
     }
     svg.writeToFile(svgFile);
 }
-std::string makeSVGstring(const std::string &input) {
+std::string makeSVGstring(const char* &input) {
     Interpol::interpolRecursionCount = 0;
 
     BMP inputBmp;
-    inputBmp.ReadFromString(input);
+    inputBmp.ReadFromFile(input);
 
     imageWrapper w_imWrapper(&inputBmp);
 
@@ -309,7 +311,7 @@ void test2() {
 
 
     for (auto pc: path.commands) {
-        std::cout << pc->draw() << " ";
+    //    std::cout << pc->draw() << " ";
     }
     std::cout << "\n";
 
@@ -318,7 +320,7 @@ void test2() {
     std::cout << "reversePath:\n";
 
     for (auto pc: reversePath.commands) {
-        std::cout << pc->draw() << " ";
+     //   std::cout << pc->draw() << " ";
     }
     std::cout << "\n";
 

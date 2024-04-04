@@ -8,6 +8,6 @@
 void makeSVG(const std::string &inFile, const std::string &outFile, bool drawRef);
 
 std::string makeGeojsonString(const std::string& input);
-std::string makeSVGstring(const std::string& input);
+std::string makeSVGstring(const char* &input);
 
 #endif //SKANDIKIT_ENTRY_H

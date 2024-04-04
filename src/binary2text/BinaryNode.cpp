@@ -1,26 +1,31 @@
-#include "../../includes/clausewitz2parse/Node.h"
+#include "../../includes/binary2text/BinaryNode.h"
 #include <iostream>
 
-std::string remove_slashes(std::string input)
-{
-    if(input[0]=='"'){
-        input.erase(0,1);
-    }
-    if(input[input.length()-1]=='"'){
-        input.erase(input.length()-1,1);
-    }
-    return input;
+
+std::string BinaryValueNode::type() const {
+    return "BinaryValueNode";
 }
 
+std::string BinaryArrayNode::type() const {
+    return "BinaryArrayNode";
+}
 
-msgpack::type::variant ValueNode::toMsgPack() const {
+std::string BinaryObjectNode::type() const {
+    return "BinaryObjectNode";
+}
+
+std::string BinaryConditionalNode::type() const {
+    return "BinaryConditionalNode";
+}
+
+msgpack::type::variant BinaryValueNode::toMsgPack() const {
     if (std::all_of(value.begin(), value.end(), ::isdigit)) {
         return msgpack::type::variant(std::stoi(value));
     }
     return msgpack::type::variant(std::move(value));
 }
 
-msgpack::type::variant ArrayNode::toMsgPack() const {
+msgpack::type::variant BinaryArrayNode::toMsgPack() const {
     std::vector<msgpack::type::variant> packed_values;
     for (const auto &value: values) {
         packed_values.push_back(value->toMsgPack());
@@ -28,7 +33,7 @@ msgpack::type::variant ArrayNode::toMsgPack() const {
     return msgpack::type::variant(std::move(packed_values));
 }
 
-msgpack::type::variant ObjectNode::toMsgPack() const {
+msgpack::type::variant BinaryObjectNode::toMsgPack() const {
     std::map<msgpack::type::variant, msgpack::type::variant> packed_map;
     for (const auto &pair: children) {
         packed_map.insert({std::move(msgpack::type::variant(pair.first)), std::move(pair.second->toMsgPack())});
@@ -36,15 +41,23 @@ msgpack::type::variant ObjectNode::toMsgPack() const {
     return msgpack::type::variant(std::move(packed_map));
 }
 
-msgpack::type::variant ConditionalNode::toMsgPack() const {
+msgpack::type::variant BinaryConditionalNode::toMsgPack() const {
     std::map<std::string, msgpack::type::variant> empty_map;
     return msgpack::type::variant("");
 }
 
 
-std::string ArrayNode::toJSON() const {
+std::string BinaryArrayNode::toJSON() const {
     std::string result = "[";
     for (auto &value: values) {
+        // std::cout << "Array val " << value->length() << std::endl;
+
+        if (value == nullptr) {
+            //std::cout << "Null pointer encountered!\n";
+            continue; // Or handle the error differently
+        }
+
+
         if (result.size() > 1) result += ",";
         result += value->toJSON();
     }
@@ -52,46 +65,46 @@ std::string ArrayNode::toJSON() const {
     return result;
 }
 
-size_t ArrayNode::length() const {
+size_t BinaryArrayNode::length() const {
     return values.size();
 }
 
-std::string ValueNode::toJSON() const {
+
+std::string BinaryValueNode::toJSON() const {
     // If the value can be converted to a simple int. Paradox's floats, ie. 123.000
     // will be returned as a string(for now anyways).
     if (std::all_of(value.begin(), value.end(), ::isdigit)) {
         return value;
-    }
-    else {
-        //Some strings in the game are already enclosed in quotation marks, so let's not do it twice.
+    } else {
         if (value.find('"') != -1) {
             return value;
         }
+
         return '"' + value + '"';
     }
 }
 
-size_t ValueNode::length() const {
+size_t BinaryValueNode::length() const {
     return 1;
 }
 
-std::string ObjectNode::toJSON() const {
+std::string BinaryObjectNode::toJSON() const {
     std::string result = "{";
     for (const auto &pair: children) {
         //We initialize result with length 1. If it's
         // larger than that, it means that the first element has already been added.
         if (result.size() > 1) result += ",";
         //first -> key, second -> value(<Node>)
-        result += '"' + remove_slashes(pair.first) + "\":" + pair.second->toJSON();
+        result += '"' + pair.first + "\":" + pair.second->toJSON();
     }
     result += "}";
     return result;
 }
 
-size_t ObjectNode::length() const {
+size_t BinaryObjectNode::length() const {
     return children.size();
 }
 
-std::string ConditionalNode::toJSON() const {
+std::string BinaryConditionalNode::toJSON() const {
     return "{}";
 }

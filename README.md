@@ -4,6 +4,23 @@ Skanderbeg Dev Kit is a small toolkit written in C++
 for dealing with some processing-intensive task related to 
 working with Paradox Interactive's game and datafiles.
 
+
+## Modules
+
+- clausewitz2parse is an efficient parser for save and gamefiles saved using Clausewitz Engine's syntax. 
+The parser recursively loops through each object and transforms it into an AST node. The AST can then be 
+serialized into either JSON or MsgPack. 
+- ironman2text is a binary decoder for "ironman" savefiles from Clausewitz Engine's games. 
+These savefiles use a format wherein all keys are assigned an arbitrary index on an ironman dictionary(which is game specific)
+and each value type has its own mean of being serialized into binary form. The decoder takes the contents of an ironman file, and 
+returns it in a plaintext form. (which can be later on processed by clausewitz2parse).
+- bmp2vector was largely authored by @Milith. It takes a .bmp
+  from a Paradox game as an input (for instance, provinces.bmp or a F10 map from EU4)
+  and vectorizes it. The output - in a geojson form - is a basis for map display on Skanderbeg.
+  However, bmp2vector can also output into a SVG file easily readable by all modern browsers, and which
+  can be easily transformed into a raster image format of any size.
+
+
 ### Features
 
 All functions here are contained in functions.h/.cpp file.

@@ -2,10 +2,10 @@
 <project version="4">
   <component name="CMakeSharedSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug - WASM" ENABLED="true" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DCMAKE_COLOR_DIAGNOSTICS:BOOL=OFF -DCMAKE_TOOLCHAIN_FILE=c:/Users/jarvi/CLionProjects/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -Dis_wasm=true" />
-      <configuration PROFILE_NAME="Release - WASM" ENABLED="true" CONFIG_NAME="Release" GENERATION_OPTIONS="-DCMAKE_COLOR_DIAGNOSTICS:BOOL=OFF -DCMAKE_TOOLCHAIN_FILE=c:/Users/jarvi/CLionProjects/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -Dis_wasm=true" />
-      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
-      <configuration PROFILE_NAME="Release" ENABLED="false" CONFIG_NAME="Release" />
+      <configuration PROFILE_NAME="Debug - WASM" ENABLED="true" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DCMAKE_COLOR_DIAGNOSTICS:BOOL=OFF -DCMAKE_TOOLCHAIN_FILE=&quot;E:/Programming stuff/CLionProjects/emsdkk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake&quot; -Dis_wasm=true" />
+      <configuration PROFILE_NAME="Release - WASM" ENABLED="true" CONFIG_NAME="Release" GENERATION_OPTIONS="-DCMAKE_COLOR_DIAGNOSTICS:BOOL=OFF -DCMAKE_TOOLCHAIN_FILE=&quot;E:/Programming stuff/CLionProjects/emsdkk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake&quot; -Dis_wasm=true" />
+      <configuration PROFILE_NAME="Debug - C2P" ENABLED="true" CONFIG_NAME="Debug" />
+      <configuration PROFILE_NAME="Release - C2P" ENABLED="true" CONFIG_NAME="Release" />
     </configurations>
   </component>
 </project>

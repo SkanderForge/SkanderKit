@@ -1,10 +1,13 @@
+#include <utility>
+#include <iostream>
 #include "../../includes/clausewitz2parse/Parser.h"
 
-Parser::Parser(Lexer &l) : lexer(l), currentToken(lexer.getNextToken()) {}
+Parser::Parser(const std::string &input) : lexer("\n{\n" + input + "\n}\n"), currentToken(lexer.getNextToken()) {}
 
 std::unique_ptr<Node> Parser::parse() {
     return parseObject();
 }
+
 
 std::unique_ptr<ObjectNode> Parser::parseMap() {
     std::unique_ptr<ObjectNode> object = std::make_unique<ObjectNode>();
@@ -26,8 +29,7 @@ std::unique_ptr<ObjectNode> Parser::parseMap() {
             } else if (currentToken.type == Token::TokenType::OPEN_BRACE) {
                 value = parseObject();
             } else if (currentToken.type == Token::TokenType::ENCLOSED_OBJECT) {
-                Lexer t('{' + currentToken.value + '}');
-                Parser parser(t);
+                Parser parser(currentToken.value);
                 value = parser.parse();
             } else {
                 throw std::runtime_error("Expected a value, got " + currentToken.value);
@@ -56,10 +58,10 @@ std::unique_ptr<ObjectNode> Parser::parseMap() {
             }
             arrayNode->values.push_back(std::move(value));
         } else {
-            if(!array->length()) {
+            if (!array->length()) {
                 object->children.emplace_back(key, std::move(value));
-            }else{
-                object->children.emplace_back("list",std::move(array));
+            } else {
+                object->children.emplace_back("list", std::move(array));
                 array = std::make_unique<ArrayNode>();
             }
         }
@@ -74,7 +76,7 @@ std::unique_ptr<ArrayNode> Parser::parseArray() {
     std::unique_ptr<ArrayNode> array = std::make_unique<ArrayNode>();
     while (currentToken.type == Token::TokenType::IDENTIFIER) {
         std::unique_ptr<ValueNode> value = std::make_unique<ValueNode>(currentToken.value);
-        if(currentToken.type == Token::TokenType::CLOSE_BRACE) return array;
+        if (currentToken.type == Token::TokenType::CLOSE_BRACE) return array;
         expect(Token::TokenType::IDENTIFIER);
         array->values.push_back(std::move(value));
     }
@@ -84,7 +86,6 @@ std::unique_ptr<ArrayNode> Parser::parseArray() {
 //Object is anything between curly {} braces. Later on we distinguish between an array { a, b, c} and map {key = value}
 std::unique_ptr<Node> Parser::parseObject() {
     expect(Token::TokenType::OPEN_BRACE);
-
     //Looking up 2 tokens ahead allows us to determine what type of object we are dealing with.
     size_t current_position = lexer.getPosition();
     Token lookup = lexer.getNextToken();
@@ -92,6 +93,7 @@ std::unique_ptr<Node> Parser::parseObject() {
     lexer.setPosition(current_position);
 
     std::unique_ptr<ObjectNode> obj = std::make_unique<ObjectNode>();
+
     if (currentToken.type == Token::TokenType::IDENTIFIER && lookup.type == Token::TokenType::EQUAL) {
         //Normal map, ie. { a = b }
         obj = parseMap();
@@ -118,10 +120,8 @@ void Parser::expect(Token::TokenType type) {
     if (currentToken.type == type) {
         getNextToken("Expecter");
     } else {
-        std::cout << lexer.debug_string;
-        throw std::runtime_error(
-                "Unexpected TOKEN at token: " +
-                currentToken.value);
+        std::cout << "\n\n\n\n"<<lexer.debug_string;
+        std::exit(1);
     }
 }
 

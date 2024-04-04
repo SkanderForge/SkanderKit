@@ -13,12 +13,11 @@
 #include "Token.h"
 class Parser {
 public:
-    Parser(Lexer &l);
-
+    explicit Parser(const std::string& input);
     std::unique_ptr<Node> parse();
 
 private:
-    Lexer &lexer;
+    Lexer lexer;
     Token currentToken;
 
     std::unique_ptr<ObjectNode> parseMap();

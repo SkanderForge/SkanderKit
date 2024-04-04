@@ -56,7 +56,7 @@ namespace Geom
         buffer << "<!DOCTYPE html>\n";
         buffer << "<html>\n";
         buffer << "<body>\n";
-        buffer << "<svg height=\"" << dim.x << "\" width=\"" << dim.y << "\">";
+        buffer << R"(<svg xmlns="http://www.w3.org/2000/svg" height=")" << dim.x << "\" width=\"" << dim.y << "\">";
         //ai_fileStream << "<svg viewBox = '0 0 " << dim.x << " " << dim.y << "' xmlns = 'http://www.w3.org/2000/svg'>";
         buffer << "\n";
     }

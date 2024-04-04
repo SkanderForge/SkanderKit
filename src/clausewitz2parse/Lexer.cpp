@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include "../../includes/clausewitz2parse/Lexer.h"
 #include <iostream>
+#include <algorithm>
 
 Lexer::Lexer(std::string s) : source(std::move(s)), position(0), counter(0), debug_string("") {}
 
@@ -49,9 +50,6 @@ Token Lexer::getNextToken() {
     } else if (Lexer::isString(current)) {
         return getIdentifierToken();
     }
-
-
-
     // Unrecognized character, throw an error
     throw std::runtime_error("Unrecognized character: " + std::to_string(current) + debug_string);
 }
@@ -86,8 +84,14 @@ Token Lexer::getIdentifierToken() {
     std::string identifier = source.substr(start, position - start);
     //Let's hope we don't end up exploding something because of it.
     std::replace(identifier.begin(), identifier.end(), '\\', '/');
+    if (identifier == "EU4txt") return getNextToken();
+    //Dirty hack for dealing with objects that miss an equal sign, like map_area_data{}
+    //If someone can figure out something smarter please let me know
+    if(source[position]=='{'){
+        source[position] = '=';
+        source[position+1] = '{';
+    }
 
-    if (identifier == "EU4txt") return Token(Token::TokenType::HEADER, "");
     //EU4 has a rather hacky syntax, where in some situations value of a "" string should be parsed as an object.
     if (identifier.find('{') != -1 || identifier.find('=') != -1) {
         identifier.erase(0, 1);
@@ -114,7 +118,7 @@ Token Lexer::getIdentifierToken() {
         return Token(Token::TokenType::CONDITIONAL_OBJECT, conditional, object);
     }
 
-    debug_string += identifier;
+    //debug_string += "\n"+identifier;
     return Token(Token::TokenType::IDENTIFIER, identifier);
 }
 
