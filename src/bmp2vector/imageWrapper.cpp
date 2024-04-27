@@ -1,4 +1,4 @@
-#include "bmp2vector/imageWrapper.h"
+#include "../bmp2vector/imageWrapper.h"
 #include <queue>
 #include <deque>
 

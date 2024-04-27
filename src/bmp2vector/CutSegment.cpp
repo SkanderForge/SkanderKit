@@ -1,6 +1,6 @@
-#include "bmp2vector/CutSegment.h"
+#include "../bmp2vector/CutSegment.h"
 //#include "Interpol.h"
-#include "bmp2vector/Interpol_util.h"
+#include "../bmp2vector/Interpol_util.h"
 
 
 #ifdef DEBUG_CUTSEGMENT

@@ -1,6 +1,6 @@
 #include <iomanip>
 
-#include "bmp2vector/Shape.h"
+#include "../bmp2vector/Shape.h"
 #include <sstream>
 
 #ifdef DEBUG_SHAPE

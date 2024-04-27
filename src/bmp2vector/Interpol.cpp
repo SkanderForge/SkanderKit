@@ -2,10 +2,10 @@
 #include <algorithm>
 #include <stdlib.h>
 
-#include "bmp2vector/Interpol.h"
-#include "bmp2vector/Interpol_util.h"
-#include "bmp2vector/Shape.h"
-#include "bmp2vector/CutSegment.h"
+#include "../bmp2vector/Interpol.h"
+#include "../bmp2vector/Interpol_util.h"
+#include "../bmp2vector/Shape.h"
+#include "../bmp2vector/CutSegment.h"
 
 namespace Interpol
 {

@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "bmp2vector/Command.h"
+#include "../bmp2vector/Command.h"
 
 
 namespace Geom

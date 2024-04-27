@@ -18,7 +18,7 @@
 *                                                *
 *************************************************/
 
-#include "bmp2vector/EasyBMP.h"
+#include "../bmp2vector/EasyBMP.h"
 #include <sstream>
 
 /* These functions are defined in EasyBMP.h */

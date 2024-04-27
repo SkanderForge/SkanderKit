@@ -1,3 +1,3 @@
 #include <iostream>
 
-#include "bmp2vector/Graph.h"
+#include "../bmp2vector/Graph.h"

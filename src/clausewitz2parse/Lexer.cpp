@@ -12,16 +12,12 @@ void Lexer::setPosition(size_t pos) {
 }
 
 Token Lexer::getNextToken() {
-    //  auto start = high_resolution_clock::now();
-
-    // Skip whitespace
-    skipWhitespace();
-
-
-
+    while (position < source.length() && (std::isspace(source[position]) || source[position] == 0)) {
+        position++;
+    }
     // If we're at the end of the input, return an END_OF_FILE token
     if (position >= source.length()) {
-        return Token(Token::TokenType::END_OF_FILE, "");
+        return {Token::TokenType::END_OF_FILE, ""};
     }
     unsigned char current = source[position];
     //Skip comments
@@ -40,13 +36,13 @@ Token Lexer::getNextToken() {
     //  debug_string.push_back(current);
     if (current == '=') {
         position++;
-        return Token(Token::TokenType::EQUAL, "=");
+        return {Token::TokenType::EQUAL, "="};
     } else if (current == '{') {
         position++;
-        return Token(Token::TokenType::OPEN_BRACE, "{");
+        return {Token::TokenType::OPEN_BRACE, "{"};
     } else if (current == '}') {
         position++;
-        return Token(Token::TokenType::CLOSE_BRACE, "}");
+        return {Token::TokenType::CLOSE_BRACE, "}"};
     } else if (Lexer::isString(current)) {
         return getIdentifierToken();
     }
@@ -96,7 +92,7 @@ Token Lexer::getIdentifierToken() {
     if (identifier.find('{') != -1 || identifier.find('=') != -1) {
         identifier.erase(0, 1);
         identifier.erase(identifier.length() - 1, 1);
-        return Token(Token::TokenType::ENCLOSED_OBJECT, identifier);
+        return {Token::TokenType::ENCLOSED_OBJECT, identifier};
     }
 
     //EU4 has weird conditional statements, like [[variable] { code }]
@@ -107,19 +103,15 @@ Token Lexer::getIdentifierToken() {
         std::string conditional = identifier.substr(c_start + 1, c_end - 1);
         std::string object;
         position++;
-        //throw std::runtime_error("");
         while (source[position] != ']') {
             object.push_back(source[position]);
             position++;
         }
-        //throw std::runtime_error(object);
         position++;
-     //   std::cout << "Returning " << conditional << object << std::endl;
-        return Token(Token::TokenType::CONDITIONAL_OBJECT, conditional, object);
+        return {Token::TokenType::CONDITIONAL_OBJECT, conditional, object};
     }
 
-    //debug_string += "\n"+identifier;
-    return Token(Token::TokenType::IDENTIFIER, identifier);
+    return {Token::TokenType::IDENTIFIER, identifier};
 }
 
 bool Lexer::isString(unsigned char ch, bool in_quotations) {

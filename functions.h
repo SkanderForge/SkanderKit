@@ -3,8 +3,8 @@
 
 
 #include <string>
-#include "Node.h"
-#include "BinaryNode.h"
+#include "../clausewitz2parse//Node.h"
+#include "../binary2text//BinaryNode.h"
 
 
 std::string c2msgpack(const std::string &input);

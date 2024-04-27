@@ -1,9 +1,11 @@
 #include <utility>
 #include <iostream>
 #include "../../includes/binary2text/BinaryParser.h"
+#include <unordered_set>
+#include <unordered_map>
 
-BinaryParser::BinaryParser(const std::string &input, const std::string &game) : lexer(std::stringstream(input),game),
-                                                       currentToken(lexer.getNextToken()) {
+BinaryParser::BinaryParser(const std::string &input, const std::string &game) : lexer(std::stringstream(input), game),
+                                                                                currentToken(lexer.getNextToken()) {
 }
 
 std::unique_ptr<BinaryNode> BinaryParser::parse() {
@@ -16,12 +18,13 @@ std::unique_ptr<BinaryObjectNode> BinaryParser::parseMap() {
     std::unique_ptr<BinaryNode> value;
     std::string key = "key";
     uint16_t keyCode;
+    std::unordered_set<std::string> existingKeys;
     std::unordered_map<std::string, int> key_usage_count;
     std::unique_ptr<BinaryArrayNode> array = std::make_unique<BinaryArrayNode>();
     //std::cout << currentToken.getTypeString() << std::endl;
 
-    while (currentToken.type != BinaryToken::TokenType::CLOSE_BRACE && currentToken.type !=
-           BinaryToken::TokenType::END_OF_FILE) {
+    while (currentToken.type != BinaryToken::TokenType::CLOSE_BRACE &&
+           currentToken.type != BinaryToken::TokenType::END_OF_FILE) {
         if (currentToken.type == BinaryToken::TokenType::IDENTIFIER) {
             key = currentToken.value;
             keyCode = currentToken.code;
@@ -38,8 +41,6 @@ std::unique_ptr<BinaryObjectNode> BinaryParser::parseMap() {
                 value = parseObject();
                 lexer.popParent();
             } else if (currentToken.type == BinaryToken::TokenType::ENCLOSED_OBJECT) {
-                // BinaryParser parser(currentToken.value);
-                // value = parser.parse();
             } else {
                 throw std::runtime_error("Expected a value, got " + currentToken.value);
             }
@@ -49,15 +50,20 @@ std::unique_ptr<BinaryObjectNode> BinaryParser::parseMap() {
             lexer.popParent();
             array->values.insert(array->values.begin(), std::make_unique<BinaryValueNode>(key));
         }
-        auto found_element = std::find_if(object->children.begin(), object->children.end(),
-                                          [&key](const std::pair<std::string, std::unique_ptr<BinaryNode> > &lookup) {
-                                              return lookup.first == key;
-                                          });
+
+        bool exists = existingKeys.find(key) != existingKeys.end();
+
 
 
         //The element DOES exist already
-        if (found_element != object->children.end()) {
+        if (exists) {
             //<ArrayNode> derives from <Node>. This cast will only be successful if found_element is already an array node.
+
+            auto found_element = std::find_if(object->children.begin(), object->children.end(),
+                                              [&key](const std::pair<std::string, std::unique_ptr<BinaryNode>> &lookup) {
+                                                  return lookup.first == key;
+                                              });
+
             auto *arrayNode = dynamic_cast<BinaryArrayNode *>(found_element->second.get());
             if (!arrayNode) {
                 //If the element is NOT an array node, we create it

@@ -1,4 +1,4 @@
-#include "bmp2vector/GeoJson.h"
+#include "../bmp2vector/GeoJson.h"
 #include <sstream>
 
 #ifdef DEBUG_GEOJSON

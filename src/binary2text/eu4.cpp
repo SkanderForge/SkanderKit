@@ -6043,5 +6043,15 @@ std::unordered_map<std::string, std::string> eu4Dict = {
 {"15502","relation_with_same_culture_group"},
 {"15503","relation_with_accepted_culture"},
 {"15504","relation_with_other_culture"},
-{"15505","sub_messages_seen"}
+{"15505","sub_messages_seen"},
+        {"UNK_15537","num_subunits"},
+        {"UNK_15538","num_subunits_type_and_cat"},
+{"16097","last_months_recurring_income"},
+{"16098","last_months_recurring_expenses"},
+{"15770","needs_money_for_ships"},
+{"1004","value"},
+{"15535","map_gfx"},
+{"15536","ambient_objects"},
+{"15979","num_collectors_including_pirates"},
+{"15978","collector_power_including_pirates"}
 };

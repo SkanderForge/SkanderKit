@@ -1,46 +1,15 @@
 #include "../../includes/clausewitz2parse/Node.h"
 #include <iostream>
 
-std::string remove_slashes(std::string input)
-{
-    if(input[0]=='"'){
-        input.erase(0,1);
+std::string remove_slashes(std::string input) {
+    if (input[0] == '"') {
+        input.erase(0, 1);
     }
-    if(input[input.length()-1]=='"'){
-        input.erase(input.length()-1,1);
+    if (input[input.length() - 1] == '"') {
+        input.erase(input.length() - 1, 1);
     }
     return input;
 }
-
-
-msgpack::type::variant ValueNode::toMsgPack() const {
-    if (std::all_of(value.begin(), value.end(), ::isdigit)) {
-        return msgpack::type::variant(std::stoi(value));
-    }
-    return msgpack::type::variant(std::move(value));
-}
-
-msgpack::type::variant ArrayNode::toMsgPack() const {
-    std::vector<msgpack::type::variant> packed_values;
-    for (const auto &value: values) {
-        packed_values.push_back(value->toMsgPack());
-    }
-    return msgpack::type::variant(std::move(packed_values));
-}
-
-msgpack::type::variant ObjectNode::toMsgPack() const {
-    std::map<msgpack::type::variant, msgpack::type::variant> packed_map;
-    for (const auto &pair: children) {
-        packed_map.insert({std::move(msgpack::type::variant(pair.first)), std::move(pair.second->toMsgPack())});
-    }
-    return msgpack::type::variant(std::move(packed_map));
-}
-
-msgpack::type::variant ConditionalNode::toMsgPack() const {
-    std::map<std::string, msgpack::type::variant> empty_map;
-    return msgpack::type::variant("");
-}
-
 
 std::string ArrayNode::toJSON() const {
     std::string result = "[";
@@ -62,14 +31,27 @@ std::string ValueNode::toJSON() const {
     if (std::all_of(value.begin(), value.end(), ::isdigit)) {
         return value;
     }
-    else {
-        //Some strings in the game are already enclosed in quotation marks, so let's not do it twice.
-        if (value.find('"') != -1) {
-            return value;
+    uint8_t i = 0;
+    uint8_t required = value.length();
+    if(std::count(value.begin(),value.end(), '.') == 1) required--;
+    if(value[0] == '-') required--;
+
+    for (char ch: value) {
+        if (isdigit(ch)) {
+            i++;
         }
-        return '"' + value + '"';
     }
+    if(i == required){
+        return value;
+    }
+
+    //Some strings in the game are already enclosed in quotation marks, so let's not do it twice.
+    if (value.find('"') != std::string::npos) {
+        return value;
+    }
+    return '"' + value + '"';
 }
+
 
 size_t ValueNode::length() const {
     return 1;

@@ -1,4 +1,4 @@
-#include "bmp2vector/types.h"
+#include "../bmp2vector/types.h"
 
 coord toCoord(const std::string& s)
 {

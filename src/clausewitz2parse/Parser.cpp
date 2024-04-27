@@ -1,5 +1,7 @@
 #include <utility>
 #include <iostream>
+#include <unordered_set>
+#include <unordered_map>
 #include "../../includes/clausewitz2parse/Parser.h"
 
 Parser::Parser(const std::string &input) : lexer("\n{\n" + input + "\n}\n"), currentToken(lexer.getNextToken()) {}
@@ -11,11 +13,13 @@ std::unique_ptr<Node> Parser::parse() {
 
 std::unique_ptr<ObjectNode> Parser::parseMap() {
     std::unique_ptr<ObjectNode> object = std::make_unique<ObjectNode>();
+    std::unordered_set<std::string> existingKeys;
     std::unique_ptr<Node> value;
     std::string key = "key";
-    std::unordered_map<std::string, int> key_usage_count;
     std::unique_ptr<ArrayNode> array = std::make_unique<ArrayNode>();
     while (currentToken.type != Token::TokenType::CLOSE_BRACE && currentToken.type != Token::TokenType::END_OF_FILE) {
+//        auto start = std::chrono::high_resolution_clock::now();
+
         if (currentToken.type == Token::TokenType::IDENTIFIER) {
             key = currentToken.value;
         }
@@ -38,15 +42,15 @@ std::unique_ptr<ObjectNode> Parser::parseMap() {
             array = parseArray();
             array->values.insert(array->values.begin(), std::make_unique<ValueNode>(key));
         }
-        auto found_element = std::find_if(object->children.begin(), object->children.end(),
-                                          [&key](const std::pair<std::string, std::unique_ptr<Node>> &lookup) {
-                                              return lookup.first == key;
-                                          });
-
-
+        bool exists = existingKeys.find(key) != existingKeys.end();
         //The element DOES exist already
-        if (found_element != object->children.end()) {
-            //<ArrayNode> derives from <Node>. This cast will only be successful if found_element is already an array node.
+        if (exists) {
+            auto found_element = std::find_if(object->children.begin(), object->children.end(),
+                                              [&key](const std::pair<std::string, std::unique_ptr<Node>> &lookup) {
+                                                  return lookup.first == key;
+                                              });
+
+            //<ArrayNode>> derives from <Node>. This cast will only be successful if found_element is already an array node.
             auto *arrayNode = dynamic_cast<ArrayNode *>(found_element->second.get());
             if (!arrayNode) {
                 //If the element is NOT an array node, we create it
@@ -59,12 +63,17 @@ std::unique_ptr<ObjectNode> Parser::parseMap() {
             arrayNode->values.push_back(std::move(value));
         } else {
             if (!array->length()) {
+                existingKeys.insert(key);
                 object->children.emplace_back(key, std::move(value));
             } else {
                 object->children.emplace_back("list", std::move(array));
                 array = std::make_unique<ArrayNode>();
             }
         }
+//        auto end = std::chrono::high_resolution_clock::now();
+//        auto duration = duration_cast<std::chrono::microseconds>(end - start);
+//        std::cout << "Execution time: " << duration.count() << std::endl;
+
         getNextToken("Finished while loop");
     }
     return object;
@@ -85,6 +94,7 @@ std::unique_ptr<ArrayNode> Parser::parseArray() {
 
 //Object is anything between curly {} braces. Later on we distinguish between an array { a, b, c} and map {key = value}
 std::unique_ptr<Node> Parser::parseObject() {
+    auto start = std::chrono::high_resolution_clock::now();
     expect(Token::TokenType::OPEN_BRACE);
     //Looking up 2 tokens ahead allows us to determine what type of object we are dealing with.
     size_t current_position = lexer.getPosition();
@@ -92,10 +102,9 @@ std::unique_ptr<Node> Parser::parseObject() {
     Token lookup_second = lexer.getNextToken();
     lexer.setPosition(current_position);
 
-    std::unique_ptr<ObjectNode> obj = std::make_unique<ObjectNode>();
-
     if (currentToken.type == Token::TokenType::IDENTIFIER && lookup.type == Token::TokenType::EQUAL) {
         //Normal map, ie. { a = b }
+        std::unique_ptr<ObjectNode> obj = std::make_unique<ObjectNode>();
         obj = parseMap();
         return obj;
     } else if (currentToken.type == Token::TokenType::OPEN_BRACE) {
@@ -120,7 +129,7 @@ void Parser::expect(Token::TokenType type) {
     if (currentToken.type == type) {
         getNextToken("Expecter");
     } else {
-        std::cout << "\n\n\n\n"<<lexer.debug_string;
+        std::cout << "\n\n\n\n" << lexer.debug_string;
         std::exit(1);
     }
 }

@@ -5,6 +5,9 @@
 #include "BinaryToken.h"
 #include <chrono>
 #include <unordered_map>
+#include <sstream>
+#include <vector>
+
 using namespace std::chrono;
 
 class BinaryLexer {
@@ -26,6 +29,7 @@ private:
     size_t position;
     typedef std::chrono::duration<float> float_seconds;
     std::vector<uint16_t> parents;
+    std::vector<uint16_t> codes;
     bool isString(unsigned char ch, bool in_quotations = false);
     std::string readAsHex(int length = 1);
 

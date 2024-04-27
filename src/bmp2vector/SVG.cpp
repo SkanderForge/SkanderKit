@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
-#include "bmp2vector/SVG.h"
+#include "../bmp2vector/SVG.h"
 
 namespace Geom
 {

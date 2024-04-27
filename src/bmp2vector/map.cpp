@@ -1,10 +1,9 @@
 #include <vector>
 #include <utility>
 
-#include "bmp2vector/EasyBMP.h"
-
-#include "bmp2vector/Map.h"
-#include "bmp2vector/types.h"
+#include "../bmp2vector/EasyBMP.h"
+#include "../bmp2vector/Map.h"
+#include "../bmp2vector/types.h"
 
 
 Map::Map(unsigned int ai_width, unsigned int ai_height)

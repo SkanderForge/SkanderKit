@@ -1,6 +1,6 @@
 #include <math.h>
-#include "bmp2vector/Rgb.h"
-#include "bmp2vector/types.h"
+#include "../bmp2vector/types.h"
+#include "../bmp2vector/Rgb.h"
 
 Rgb::Rgb(uint ai_red, uint ai_green, uint ai_blue)
 {

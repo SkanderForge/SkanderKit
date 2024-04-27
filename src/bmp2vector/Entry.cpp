@@ -6,17 +6,17 @@
 #include <map>
 #include <unordered_set>
 
-#include "bmp2vector/EasyBMP.h"
-#include "bmp2vector/Rgb.h"
-#include "bmp2vector/Map.h"
-#include "bmp2vector/imageWrapper.h"
-#include "bmp2vector/SVG.h"
-#include "bmp2vector/types.h"
-#include "bmp2vector/Interpol.h"
-#include "bmp2vector/Interpol_util.h"
-#include "bmp2vector/Graph.h"
-#include "bmp2vector/GeoJson.h"
-#include "bmp2vector/CutSegment.h"
+#include "../bmp2vector/EasyBMP.h"
+#include "../bmp2vector/Rgb.h"
+#include "../bmp2vector/CutSegment.h"
+#include "../bmp2vector/Map.h"
+#include "../bmp2vector/imageWrapper.h"
+#include "../bmp2vector/SVG.h"
+#include "../bmp2vector/types.h"
+#include "../bmp2vector/Interpol.h"
+#include "../bmp2vector/Interpol_util.h"
+#include "../bmp2vector/Graph.h"
+#include "../bmp2vector/GeoJson.h"
 //#include "Graph.cpp"
 
 #ifndef DEBUGTRACE

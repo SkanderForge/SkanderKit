@@ -4,67 +4,20 @@
 #include <fstream>
 #include "includes/bmp2vector/Entry.h"
 #include "functions.h"
+#include <chrono>
 
-#include <BinaryParser.h>
+#include "../binary2text/BinaryParser.h"
 
 #include "includes/binary2text/Dictionaries.h"
 
-std::string c2msgpack(const std::string &input) {
-    Parser parser(input);
-    std::unique_ptr<Node> ast = parser.parse();
-    auto msg = ast->toMsgPack();
-    std::stringstream buffer;
-    msgpack::pack(buffer, msg);
-    return buffer.str();
-}
-
-std::unordered_map<std::string, std::string> c2keys(const std::string &input) {
-    std::unordered_map<std::string, std::string> map;
-    std::string currentKey;
-    std::string currentValue;
-    int braceLevel = 0;
-    std::stringstream ss(input);
-    std::string line;
-    while (std::getline(ss, line)) {
-        if (line.find('{') != std::string::npos) {
-            ++braceLevel;
-            if (braceLevel == 1) {
-                currentKey.clear();
-                currentValue.clear();
-
-                std::stringstream lineStream(line);
-                std::getline(lineStream, currentKey, '=');
-                currentKey.erase(currentKey.find_last_not_of(" \n\r\t") + 1); // Right trim
-            }
-        }
-        if (!currentKey.empty()) {
-            currentValue += line + "\n";
-        }
-
-        if (line.find('}') != std::string::npos) {
-            --braceLevel;
-            if (braceLevel == 0 && !currentKey.empty()) {
-                map[currentKey] += currentValue;
-                currentKey.clear();
-            }
-        }
-
-        if (braceLevel == 0 && line.find('=') != std::string::npos && line.find('{') == std::string::npos) {
-            std::stringstream lineStream(line);
-            std::string key;
-            std::getline(lineStream, key, '=');
-            key.erase(key.find_last_not_of(" \n\r\t") + 1); // Right trim
-
-            if (map.find(key) != map.end()) {
-                map[key] += "\n" + line;
-            } else {
-                map[key] = line;
-            }
-        }
-    }
-    return map;
-}
-
+//std::string c2msgpack(const std::string &input) {
+//    Parser parser(input);
+//    std::unique_ptr<Node> ast = parser.parse();
+//    auto msg = ast->toMsgPack();
+//    std::stringstream buffer;
+//    msgpack::pack(buffer, msg);
+//    return buffer.str();
+//}
 
 std::string c2json(const std::string &input) {
     Parser parser(input);
@@ -105,19 +58,31 @@ std::string read_binary_string_from_file(const std::string &filename, size_t off
 }
 
 std::string cfile2json(const std::string &inputSrc) {
+
     char three = static_cast<char>(3);
     char zero = static_cast<char>(0);
     char four = static_cast<char>(4);
-
     std::ifstream t(inputSrc);
+    auto start = std::chrono::high_resolution_clock::now();
 
     std::stringstream ss;
-    ss << t.rdbuf();
+    //ss << t.rdbuf();
+        std::string content( (std::istreambuf_iterator<char>(t) ),
+                         (std::istreambuf_iterator<char>()    ) );
 
-    int ch1 = ss.str()[0];
-    int ch2 = ss.str()[1];
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Preparation time: " << duration.count() << std::endl;
+
+
+    int ch1 = static_cast<uint8_t>(content[0]);
+    int ch2 = static_cast<uint8_t>(content[1]);
+    int ch3 = static_cast<uint8_t>(content[2]);
+    int ch4 = static_cast<uint8_t>(content[3]);
 
     std::cout << ch1 << ch2 << std::endl;
+
 
     //Victoria 3 ironman
     if (ch1 == -83 && ch2 == 85) {
@@ -125,19 +90,20 @@ std::string cfile2json(const std::string &inputSrc) {
         t.seekg(0, std::ios::end);
         std::stringstream buffer;
         std::string input = read_binary_string_from_file(inputSrc, 0, t.tellg());
-       // input.erase(0, 6);
+        // input.erase(0, 6);
         input.insert(input.begin(), zero);
         input.insert(input.begin(), three);
         input.push_back(four);
         input.push_back(zero);
         //std::cout << (int)input[0] << (int)input[1] << (int)input[2] << (int)input[3];
-
-        return b2ast(input,"vic3")->toJSON();
+        auto ast = b2ast(input, "vic3");
+        auto json = ast->toJSON();
+        return json;
 
 
     }
-    //EU4 ironman
-    if (ch1 == 69 && ch2 == 85) {
+    //EU4 ironman. We need to read up to the 4th character (t) to not confuse it with plaintext
+    if (ch1 == 69 && ch2 == 85 && ch3 == 52 && ch4 == 98) {
         std::ifstream t(inputSrc, std::ios::binary);
         t.seekg(0, std::ios::end);
         std::stringstream buffer;
@@ -148,7 +114,7 @@ std::string cfile2json(const std::string &inputSrc) {
         input.push_back(four);
         input.push_back(zero);
 
-        return b2ast(input,"eu4")->toJSON();
+        return b2ast(input, "eu4")->toJSON();
 
     }
     //CK3 ironman
@@ -162,15 +128,22 @@ std::string cfile2json(const std::string &inputSrc) {
         input.insert(input.begin(), three);
         input.push_back(four);
         input.push_back(zero);
-        return b2ast(input,"ck3")->toJSON();
-
+        return b2ast(input, "ck3")->toJSON();
     }
 
-    //plaintext?
-
-    Parser parser(inputSrc);
+    Parser parser(content);
     std::unique_ptr<Node> ast = parser.parse();
+            auto end1 = std::chrono::high_resolution_clock::now();
+        auto duration1 = duration_cast<std::chrono::microseconds>(end1 - end);
+        std::cout << "Parsing time time: " << duration1.count() << std::endl;
+
+
     std::string json = ast->toJSON();
+    auto end2 = std::chrono::high_resolution_clock::now();
+    auto duration2 = duration_cast<std::chrono::microseconds>(end2 - end1);
+    std::cout << "Generating JSON time: " << duration2.count() << std::endl;
+
+
     return json;
 }
 
@@ -180,7 +153,7 @@ std::shared_ptr<BinaryNode> b2ast(const std::string &input, const std::string &g
     ss.str(input);
 
 
-    BinaryParser parser(input,game);
+    BinaryParser parser(input, game);
 
     std::shared_ptr<BinaryNode> ast = parser.parse();
     return ast;
@@ -196,8 +169,8 @@ std::string bmp2geojson(const std::string &input) {
     return makeGeojsonString(input);
 }
 
-std::string bmp2svg(const char * &input) {
-    return makeSVGstring(input);
+std::string bmp2svg(const char &input) {
+    return makeSVGstring((const char *&) input);
 }
 
 
@@ -241,10 +214,9 @@ std::string lookupBytes(std::ifstream &file, int length) {
 
 
 std::string binary2txt(const std::string &input) {
-    std::ifstream f(
-        input,
-        //  R"(c:\Users\jarvi\Documents\Paradox Interactive\Europa Universalis IV\save games\Research\gamestate)",
-        std::ios::binary);
+    std::ifstream f(input,
+            //  R"(c:\Users\jarvi\Documents\Paradox Interactive\Europa Universalis IV\save games\Research\gamestate)",
+                    std::ios::binary);
     if (!f) {
         std::cerr << "Failed to open input file" << std::endl;
         return "";

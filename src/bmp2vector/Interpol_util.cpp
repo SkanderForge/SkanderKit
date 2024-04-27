@@ -1,4 +1,4 @@
-#include "bmp2vector/Interpol_util.h"
+#include "../bmp2vector/Interpol_util.h"
 
 
 #ifdef DEBUG_INTERPOL_UTIL
