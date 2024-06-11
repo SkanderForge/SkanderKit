@@ -1,14 +1,15 @@
-#include "includes/clausewitz2parse/Lexer.h"
+#include "includes/clausewitz2parse/PlainTextLexer.h"
 #include "includes/clausewitz2parse/Token.h"
 #include "includes/clausewitz2parse/Parser.h"
 #include <fstream>
 #include "includes/bmp2vector/Entry.h"
 #include "functions.h"
 #include <chrono>
+#include "includes/rapidjson/Document.h"
+#include "rapidjson/stringbuffer.h"
+#include <rapidjson/writer.h>
 
-#include "../binary2text/BinaryParser.h"
-
-#include "includes/binary2text/Dictionaries.h"
+#include "includes/clausewitz2parse/Dictionaries.h"
 
 //std::string c2msgpack(const std::string &input) {
 //    Parser parser(input);
@@ -67,10 +68,7 @@ std::string cfile2json(const std::string &inputSrc) {
 
     std::stringstream ss;
     //ss << t.rdbuf();
-        std::string content( (std::istreambuf_iterator<char>(t) ),
-                         (std::istreambuf_iterator<char>()    ) );
-
-
+    std::string content((std::istreambuf_iterator<char>(t)), (std::istreambuf_iterator<char>()));
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Preparation time: " << duration.count() << std::endl;
@@ -84,29 +82,35 @@ std::string cfile2json(const std::string &inputSrc) {
     std::cout << ch1 << ch2 << std::endl;
 
 
+    rapidjson::Document doc;
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+
+
     //Victoria 3 ironman
-    if (ch1 == -83 && ch2 == 85) {
+    if (ch1 == 173 && ch2 == 85) {
         std::ifstream t(inputSrc, std::ios::binary);
         t.seekg(0, std::ios::end);
-        std::stringstream buffer;
         std::string input = read_binary_string_from_file(inputSrc, 0, t.tellg());
         // input.erase(0, 6);
         input.insert(input.begin(), zero);
         input.insert(input.begin(), three);
         input.push_back(four);
         input.push_back(zero);
-        //std::cout << (int)input[0] << (int)input[1] << (int)input[2] << (int)input[3];
-        auto ast = b2ast(input, "vic3");
-        auto json = ast->toJSON();
-        return json;
+        std::cout << "Debug char:" << (int) input[0] << (int) input[1] << (int) input[2] << (int) input[3];
 
+        auto ast = b2ast(input, "vic3");
+        rapidjson::Value parsedDoc = ast->toJSONValue(doc);
+        parsedDoc.Accept(writer);
+
+        return buffer.GetString();
 
     }
     //EU4 ironman. We need to read up to the 4th character (t) to not confuse it with plaintext
     if (ch1 == 69 && ch2 == 85 && ch3 == 52 && ch4 == 98) {
         std::ifstream t(inputSrc, std::ios::binary);
         t.seekg(0, std::ios::end);
-        std::stringstream buffer;
         std::string input = read_binary_string_from_file(inputSrc, 0, t.tellg());
         input.erase(0, 6);
         input.insert(input.begin(), zero);
@@ -114,48 +118,57 @@ std::string cfile2json(const std::string &inputSrc) {
         input.push_back(four);
         input.push_back(zero);
 
-        return b2ast(input, "eu4")->toJSON();
-
+        auto ast = b2ast(input, "eu4");
+        rapidjson::Value parsedDoc = ast->toJSONValue(doc);
+        parsedDoc.Accept(writer);
+        return buffer.GetString();
     }
     //CK3 ironman
     if (ch1 == 85 && ch2 == 49) {
         std::ifstream t(inputSrc, std::ios::binary);
         t.seekg(0, std::ios::end);
-        std::stringstream buffer;
         std::string input = read_binary_string_from_file(inputSrc, 0, t.tellg());
         input.erase(0, 6);
         input.insert(input.begin(), zero);
         input.insert(input.begin(), three);
         input.push_back(four);
         input.push_back(zero);
-        return b2ast(input, "ck3")->toJSON();
+
+        auto ast = b2ast(input, "ck3");
+        rapidjson::Value parsedDoc = ast->toJSONValue(doc);
+        parsedDoc.Accept(writer);
+        return buffer.GetString();
     }
 
     Parser parser(content);
     std::unique_ptr<Node> ast = parser.parse();
-            auto end1 = std::chrono::high_resolution_clock::now();
-        auto duration1 = duration_cast<std::chrono::microseconds>(end1 - end);
-        std::cout << "Parsing time time: " << duration1.count() << std::endl;
+    auto end1 = std::chrono::high_resolution_clock::now();
+    auto duration1 = duration_cast<std::chrono::microseconds>(end1 - end);
+    std::cout << "Parsing time time: " << duration1.count() << std::endl;
 
 
-    std::string json = ast->toJSON();
+    rapidjson::Value parsedDoc = ast->toJSONValue(doc);
+    parsedDoc.Accept(writer);
+
+
     auto end2 = std::chrono::high_resolution_clock::now();
+
     auto duration2 = duration_cast<std::chrono::microseconds>(end2 - end1);
     std::cout << "Generating JSON time: " << duration2.count() << std::endl;
 
 
-    return json;
+    return buffer.GetString();
 }
 
 
-std::shared_ptr<BinaryNode> b2ast(const std::string &input, const std::string &game) {
+std::shared_ptr<Node> b2ast(const std::string &input, const std::string &game) {
     std::stringstream ss;
     ss.str(input);
 
 
-    BinaryParser parser(input, game);
+    Parser parser(ss, game);
 
-    std::shared_ptr<BinaryNode> ast = parser.parse();
+    std::shared_ptr<Node> ast = parser.parse();
     return ast;
 }
 
@@ -174,18 +187,18 @@ std::string bmp2svg(const char &input) {
 }
 
 
-std::string charPtrToHexStr(const char *input) {
-    std::stringstream ss;
-    ss << std::hex;
-
-    while (*input) {
-        // Convert the current character to its hex value and append to the result
-        ss << std::setw(2) << static_cast<int>(*input);
-        ++input; // Move to the next character
-    }
-
-    return ss.str();
-}
+//std::string charPtrToHexStr(const char *input) {
+//    std::stringstream ss;
+//    ss << std::hex;
+//
+//    while (*input) {
+//        // Convert the current character to its hex value and append to the result
+//        ss << std::setw(2) << static_cast<int>(*input);
+//        ++input; // Move to the next character
+//    }
+//
+//    return ss.str();
+//}
 
 std::string readBytesAsHex(std::ifstream &file, std::streamsize numBytes) {
     if (!file || numBytes <= 0) {

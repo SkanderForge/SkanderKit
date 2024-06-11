@@ -1,17 +1,17 @@
 #include <stdexcept>
-#include "../../includes/clausewitz2parse/Lexer.h"
+#include "../../includes/clausewitz2parse/PlainTextLexer.h"
 #include <iostream>
 #include <algorithm>
 
-Lexer::Lexer(std::string s) : source(std::move(s)), position(0), counter(0), debug_string("") {}
+PlainTextLexer::PlainTextLexer(std::string s) : source(std::move(s)), position(0), counter(0), debug_string("") {}
 
-size_t Lexer::getPosition() const { return position; }
+size_t PlainTextLexer::getPosition()  { return position; }
 
-void Lexer::setPosition(size_t pos) {
+void PlainTextLexer::setPosition(size_t pos) {
     position = pos;
 }
 
-Token Lexer::getNextToken() {
+Token PlainTextLexer::getNextToken() {
     while (position < source.length() && (std::isspace(source[position]) || source[position] == 0)) {
         position++;
     }
@@ -43,7 +43,7 @@ Token Lexer::getNextToken() {
     } else if (current == '}') {
         position++;
         return {Token::TokenType::CLOSE_BRACE, "}"};
-    } else if (Lexer::isString(current)) {
+    } else if (PlainTextLexer::isString(current)) {
         return getIdentifierToken();
     }
     // Unrecognized character, throw an error
@@ -51,17 +51,17 @@ Token Lexer::getNextToken() {
 }
 
 
-void Lexer::skipWhitespace() {
+void PlainTextLexer::skipWhitespace() {
     while (position < source.length() && (std::isspace(source[position]) || source[position] == 0)) {
         position++;
     }
 }
 
-Token Lexer::getIdentifierToken() {
+Token PlainTextLexer::getIdentifierToken() {
     size_t start = position;
     bool in_quotations = false;
     bool ignore_quotations = false;
-    while (position < source.length() && Lexer::isString(source[position], in_quotations)) {
+    while (position < source.length() && PlainTextLexer::isString(source[position], in_quotations)) {
         if (!ignore_quotations) {
             if (source[position] == '"') {
                 if (!in_quotations) {
@@ -114,7 +114,7 @@ Token Lexer::getIdentifierToken() {
     return {Token::TokenType::IDENTIFIER, identifier};
 }
 
-bool Lexer::isString(unsigned char ch, bool in_quotations) {
+bool PlainTextLexer::isString(unsigned char ch, bool in_quotations) {
 
     char underscore = '_';
     char equals = ':';

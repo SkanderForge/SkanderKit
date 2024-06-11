@@ -1,10 +1,14 @@
 #include <utility>
 #include <iostream>
 #include <unordered_set>
-#include <unordered_map>
-#include "../../includes/clausewitz2parse/Parser.h"
+#include "../../includes/clausewitz2parse/Lexer.h"
 
-Parser::Parser(const std::string &input) : lexer("\n{\n" + input + "\n}\n"), currentToken(lexer.getNextToken()) {}
+#include "../../includes/clausewitz2parse/Parser.h"
+#include "../../includes/clausewitz2parse/BinaryLexer.h"
+#include "../../includes/clausewitz2parse/PlainTextLexer.h"
+
+Parser::Parser(const std::string &input) : lexer(std::make_unique<PlainTextLexer>("\n{\n" + input + "\n}\n")), currentToken(lexer->getNextToken()) {}
+Parser::Parser(std::stringstream &s, const std::string &game) : lexer(std::make_unique<BinaryLexer>(s,game)), currentToken(lexer->getNextToken()) {}
 
 std::unique_ptr<Node> Parser::parse() {
     return parseObject();
@@ -97,10 +101,10 @@ std::unique_ptr<Node> Parser::parseObject() {
     auto start = std::chrono::high_resolution_clock::now();
     expect(Token::TokenType::OPEN_BRACE);
     //Looking up 2 tokens ahead allows us to determine what type of object we are dealing with.
-    size_t current_position = lexer.getPosition();
-    Token lookup = lexer.getNextToken();
-    Token lookup_second = lexer.getNextToken();
-    lexer.setPosition(current_position);
+    size_t current_position = lexer->getPosition();
+    Token lookup = lexer->getNextToken();
+    Token lookup_second = lexer->getNextToken();
+    lexer->setPosition(current_position);
 
     if (currentToken.type == Token::TokenType::IDENTIFIER && lookup.type == Token::TokenType::EQUAL) {
         //Normal map, ie. { a = b }
@@ -129,11 +133,11 @@ void Parser::expect(Token::TokenType type) {
     if (currentToken.type == type) {
         getNextToken("Expecter");
     } else {
-        std::cout << "\n\n\n\n" << lexer.debug_string;
+        std::cout << "\n\n\n\n";
         std::exit(1);
     }
 }
 
 void Parser::getNextToken(const std::string &caller) {
-    currentToken = lexer.getNextToken();
+    currentToken = lexer->getNextToken();
 }

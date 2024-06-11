@@ -1,5 +1,5 @@
-#ifndef C2J_LEXER_H
-#define C2J_LEXER_H
+#ifndef LEXER_H
+#define LEXER_H
 
 #include <string>
 #include "Token.h"
@@ -8,25 +8,12 @@ using namespace std::chrono;
 
 class Lexer {
 public:
-    explicit Lexer(std::string s);
+    virtual ~Lexer() = default;
+    virtual Token getNextToken() = 0; // Pure virtual
+    virtual size_t getPosition() = 0;  // Pure virtual
 
-    Token getNextToken();
-
-    size_t getPosition() const;
-
-    void setPosition(size_t pos);
-
-    std::string debug_string;
+    virtual void setPosition(size_t pos) = 0;
 private:
-    int counter;
-    std::string source;
-    size_t position;
-    typedef std::chrono::duration<float> float_seconds;
-
-    bool isString(unsigned char ch, bool in_quotations = false);
-
-    void skipWhitespace();
-    Token getIdentifierToken();
 };
 
 #endif

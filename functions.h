@@ -4,7 +4,6 @@
 
 #include <string>
 #include "../clausewitz2parse//Node.h"
-#include "../binary2text//BinaryNode.h"
 
 
 std::string c2msgpack(const std::string &input);
@@ -14,7 +13,7 @@ std::string cfile2json(const std::string &input);
 
 std::shared_ptr<Node> c2ast(const std::string &input);
 
-std::shared_ptr<BinaryNode> b2ast(const std::string &input, const std::string &game);
+std::shared_ptr<Node> b2ast(const std::string &input, const std::string &game);
 
 
 std::string bmp2geojson(const std::string &input);

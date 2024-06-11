@@ -2,6 +2,7 @@
 #define C2J_TOKEN_H
 
 #include <string>
+#include <cstdint>
 
 
 class Token {
@@ -11,13 +12,16 @@ public:
     };
     Token(TokenType type, std::string value, std::string second_value);
     Token(TokenType type, std::string value);
+    Token(TokenType type, std::string value,  uint16_t code);
 
     TokenType getType() const;
     std::string getValue() const;
     std::string getTypeString() const;
+    uint16_t code;
     std::string value;
     std::string second_value;
     TokenType type;
+    uint16_t getCode() const;
 };
 
 #endif

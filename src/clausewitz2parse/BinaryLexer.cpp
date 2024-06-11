@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "../../includes/binary2text/BinaryLexer.h"
+#include "../../includes/clausewitz2parse/BinaryLexer.h"
 #include <iostream>
 #include <algorithm>
 #include <Dictionaries.h>
@@ -19,7 +19,7 @@ std::string string_to_hex(const std::string &input) {
     return output;
 }
 
-BinaryLexer::BinaryLexer(std::stringstream s, const std::string &game) : source(std::move(s)), position(0), counter(0),
+BinaryLexer::BinaryLexer(std::stringstream &s, const std::string &game) : source(std::move(s)), position(0), counter(0),
                                                                          debug_string("") {
     if (game == "vic3") {
         dict = vic3Dict;
@@ -95,16 +95,16 @@ std::string formatDate(const Date &date) {
     return std::to_string(date.year) + "." + std::to_string(date.month) + "." + std::to_string(date.day);
 }
 
-std::streampos BinaryLexer::getPosition() {
-    auto ret = source.tellg();
+size_t BinaryLexer::getPosition() {
+    size_t ret = source.tellg();
     return ret;
 }
 
-void BinaryLexer::setPosition(std::streampos pos) {
+void BinaryLexer::setPosition(size_t pos) {
     source.seekg(pos);
 }
 
-BinaryToken BinaryLexer::getNextToken() {
+Token BinaryLexer::getNextToken() {
     uint16_t code;
     char bytes_[2];
     source.read(bytes_, 2);
@@ -117,10 +117,11 @@ BinaryToken BinaryLexer::getNextToken() {
 
     switch (code) {
         case 0: {
-            return {BinaryToken(BinaryToken::TokenType::END_OF_FILE, "")};
+            return {Token(Token::TokenType::END_OF_FILE, "")};
             break;
         }
         case 14065: {
+
             std::string current_str = source.str();
             std::string new_str = current_str;
             auto old_pos = source.tellg();
@@ -136,15 +137,15 @@ BinaryToken BinaryLexer::getNextToken() {
             source.seekg(old_pos);
         }
         case 3: {
-            return {BinaryToken(BinaryToken::TokenType::OPEN_BRACE, "{")};
+            return {Token(Token::TokenType::OPEN_BRACE, "{")};
             break;
         }
         case 4: {
-            return {BinaryToken(BinaryToken::TokenType::CLOSE_BRACE, "}")};
+            return {Token(Token::TokenType::CLOSE_BRACE, "}")};
             break;
         }
         case 1: {
-            return {BinaryToken(BinaryToken::TokenType::EQUAL, "=")};
+            return {Token(Token::TokenType::EQUAL, "=")};
             break;
         }
         case 12: {
@@ -154,12 +155,12 @@ BinaryToken BinaryLexer::getNextToken() {
             for (uint16_t datecode: codes) {
                 if (std::find(parents.begin(), parents.end(), datecode) != parents.end()) {
                     //std::cout << formatDate(numberToDate(val)) << std::endl;
-                    return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, formatDate(numberToDate(val)))};
+                    return {Token(Token::TokenType::IDENTIFIER, formatDate(numberToDate(val)))};
                 }
             }
 
             std::string output = std::to_string(val);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
             break;
         }
         case 13: {
@@ -167,7 +168,7 @@ BinaryToken BinaryLexer::getNextToken() {
             source.read(reinterpret_cast<char *>(&val), sizeof(val));
             val /= 1000;
             std::string output = std::to_string(val);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
             break;
         }
         case 14: {
@@ -175,7 +176,7 @@ BinaryToken BinaryLexer::getNextToken() {
             source.read(reinterpret_cast<char *>(&val), 1);
             std::string output;
             val ? output += "true" : output += "false";
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
             break;
         }
         case 15: {
@@ -188,14 +189,14 @@ BinaryToken BinaryLexer::getNextToken() {
             if (!val.empty() && val[val.length() - 1] == '\n') {
                 val.erase(val.length() - 1);
             }
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, val)};
+            return {Token(Token::TokenType::IDENTIFIER, val)};
             break;
         }
         case 20: {
             int32_t val; // Assuming 4-byte integer (32 bits)
             source.read(reinterpret_cast<char *>(&val), sizeof(val));
             std::string output = std::to_string(val);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
 
             break;
         }
@@ -206,7 +207,7 @@ BinaryToken BinaryLexer::getNextToken() {
             source.read(buffer, length);
             buffer[length] = '\0';
             std::string val(buffer);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, val)};
+            return {Token(Token::TokenType::IDENTIFIER, val)};
 
             break;
         }
@@ -216,7 +217,7 @@ BinaryToken BinaryLexer::getNextToken() {
             auto floatVal = static_cast<float>(val);
             floatVal /= 100000;
             std::string output = std::to_string(floatVal);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
             break;
         }
         case 668: {
@@ -225,15 +226,15 @@ BinaryToken BinaryLexer::getNextToken() {
             auto floatVal = static_cast<float>(val);
             floatVal /= 100000;
             std::string output = std::to_string(floatVal);
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, output)};
+            return {Token(Token::TokenType::IDENTIFIER, output)};
             break;
         }
         default: {
             if (dict.find(std::to_string(code)) != dict.end()) {
                 //std::cout << code << dict[std::to_string(code)] << std::endl;
-                return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, dict[std::to_string(code)], code)};
+                return {Token(Token::TokenType::IDENTIFIER, dict[std::to_string(code)], code)};
             }
-            return {BinaryToken(BinaryToken::TokenType::IDENTIFIER, "UNK_" + std::to_string(code), code)};
+            return {Token(Token::TokenType::IDENTIFIER, "UNK_" + std::to_string(code), code)};
 
             break;
 

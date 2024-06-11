@@ -2,10 +2,16 @@
 
 Token::Token(TokenType type, std::string value) : type(type), value(std::move(value)) {}
 Token::Token(TokenType type, std::string value,  std::string second_value) : type(type), value(std::move(value)), second_value(std::move(second_value)) {}
+Token::Token(TokenType type, std::string value,  uint16_t code) : type(type), value(std::move(value)), code(code) {}
 
 Token::TokenType Token::getType() const {
     return type;
 }
+
+uint16_t Token::getCode() const {
+    return code;
+}
+
 //For debug purposes
 std::string Token::getTypeString() const {
     switch (type) {

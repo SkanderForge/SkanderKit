@@ -8,16 +8,19 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "Lexer.h"
+#include "PlainTextLexer.h"
+#include "BinaryLexer.h"
 #include "Node.h"
 #include "Token.h"
 class Parser {
 public:
     explicit Parser(const std::string& input);
+    explicit Parser(std::stringstream &ss, const std::string &game);
+
     std::unique_ptr<Node> parse();
 
 private:
-    Lexer lexer;
+    std::unique_ptr<Lexer> lexer;
     Token currentToken;
 
     std::unique_ptr<ObjectNode> parseMap();

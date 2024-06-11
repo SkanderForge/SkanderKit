@@ -2,25 +2,26 @@
 #define BC2J_LEXER_H
 
 #include <string>
-#include "BinaryToken.h"
 #include <chrono>
 #include <unordered_map>
 #include <sstream>
 #include <vector>
+#include "Lexer.h"
+#include "Token.h"
 
 using namespace std::chrono;
 
-class BinaryLexer {
+class BinaryLexer: public Lexer {
 public:
-    explicit BinaryLexer(std::stringstream s, const std::string& game);
+    explicit BinaryLexer(std::stringstream &s, const std::string &game);
 
-    BinaryToken getNextToken();
+    Token getNextToken() override;
 
-    std::streampos getPosition();
+    size_t getPosition() override;
     void pushToParents(uint16_t code);
     void popParent();
 
-    void setPosition(std::streampos pos);
+    void setPosition(size_t pos) override;
     std::unordered_map<std::string, std::string> dict;
     std::string debug_string;
 private:
@@ -30,14 +31,6 @@ private:
     typedef std::chrono::duration<float> float_seconds;
     std::vector<uint16_t> parents;
     std::vector<uint16_t> codes;
-    bool isString(unsigned char ch, bool in_quotations = false);
-    std::string readAsHex(int length = 1);
-
-    void skipWhitespace();
-    BinaryToken getIdentifierToken();
-    BinaryToken getValueToken();
-    BinaryToken readString();
-
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "../../includes/clausewitz2parse/Node.h"
 #include <iostream>
+#include <cstdlib>
 
 std::string remove_slashes(std::string input) {
     if (input[0] == '"') {
@@ -26,24 +27,15 @@ size_t ArrayNode::length() const {
 }
 
 std::string ValueNode::toJSON() const {
-    // If the value can be converted to a simple int. Paradox's floats, ie. 123.000
-    // will be returned as a string(for now anyways).
-    if (std::all_of(value.begin(), value.end(), ::isdigit)) {
-        return value;
-    }
-    uint8_t i = 0;
-    uint8_t required = value.length();
-    if(std::count(value.begin(),value.end(), '.') == 1) required--;
-    if(value[0] == '-') required--;
 
-    for (char ch: value) {
-        if (isdigit(ch)) {
-            i++;
+    bool isNumeric = true;
+
+    for (char c : value) {
+        if (!std::isdigit(c) && c != '-' && c != '.') {
+            isNumeric = false;
         }
     }
-    if(i == required){
-        return value;
-    }
+    if(isNumeric) return value;
 
     //Some strings in the game are already enclosed in quotation marks, so let's not do it twice.
     if (value.find('"') != std::string::npos) {
@@ -51,6 +43,8 @@ std::string ValueNode::toJSON() const {
     }
     return '"' + value + '"';
 }
+
+
 
 
 size_t ValueNode::length() const {
@@ -70,8 +64,74 @@ std::string ObjectNode::toJSON() const {
     return result;
 }
 
+rapidjson::Value ObjectNode::toJSONValue(rapidjson::Document &d) const {
+    rapidjson::Value v(rapidjson::kObjectType);
+    for (const auto &pair: children) {
+        const char* key = pair.first.c_str();
+        rapidjson::Value keyValue;
+        keyValue.SetString(key, pair.first.length());
+        v.AddMember(keyValue,pair.second->toJSONValue(d),d.GetAllocator());
+    }
+    return v;
+}
+
+
+
 size_t ObjectNode::length() const {
     return children.size();
+}
+
+void ObjectNode::toJSON(rapidjson::Document &d) const {
+
+}
+void ValueNode::toJSON(rapidjson::Document &d) const {
+
+}
+
+rapidjson::Value ValueNode::toJSONValue(rapidjson::Document &d) const {
+    bool isNumeric = true;
+    rapidjson::Value v;
+
+    for (char c : value) {
+        if (!std::isdigit(c) && c != '-' && c != '.') {
+            isNumeric = false;
+        }
+    }
+
+    if(isNumeric){
+        if(value[value.length()-3] == '.'){
+            double temp = strtod(value.c_str(), nullptr);
+            v.SetDouble(temp);
+            return v;
+        }
+        long int temp = strtol(value.c_str(),nullptr,10);
+        v.SetInt(temp);
+        return v;
+    }
+    std::basic_string<char> withoutQuotes = remove_slashes(value);
+    v.SetString(withoutQuotes.c_str(), withoutQuotes.length(), d.GetAllocator());
+    return v;
+}
+
+
+
+void ArrayNode::toJSON(rapidjson::Document &d) const {
+    rapidjson::Value arr(rapidjson::kArrayType);
+    for (const auto& node : values) {
+        rapidjson::Value child(node->toJSONValue(d));
+        arr.PushBack(child, d.GetAllocator());
+    }
+}
+
+rapidjson::Value ArrayNode::toJSONValue(rapidjson::Document &d) const {
+    rapidjson::Value v(rapidjson::kArrayType);
+    for (const auto& node : values) {
+        if(node != nullptr) {
+            rapidjson::Value child(node->toJSONValue(d));
+            v.PushBack(child, d.GetAllocator());
+        }
+    }
+    return v;
 }
 
 std::string ConditionalNode::toJSON() const {
